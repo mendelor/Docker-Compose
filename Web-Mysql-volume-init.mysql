@@ -67,6 +67,8 @@ INSERT INTO mytable VALUES ('Hello'), ('Dolly');
 apt-get update
 apt install mysql-server mysql-client         INSIDE THE CONTAINER
 mysql -h 172.18.0.3 -P 3306 -u root -p
+apt-get install vim
+
 ----------------
 
 
