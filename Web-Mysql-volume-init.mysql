@@ -1,0 +1,76 @@
+
+
+Dockerfile:
+FROM php:7.2.2-apache
+COPY ./index.php  /var/www/html
+RUN docker-php-ext-install mysqli
+
+-----------------------------------------
+
+index.php:
+<?php
+$servername = "db";
+$username = "root";
+$password = "1234";
+
+// Create connection
+$conn = new mysqli($servername, $username, $password);
+
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+echo "Connected successfully from Apache container to container" . mysqli_get_host_info($conn) . PHP_EOL;
+
+-------------------------------------------
+
+Docker-compose.yml:
+version: '3'
+services:
+  db:
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+    image: "mysql:5.7"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - data-mysql:/var/lib/mysql
+    ports:
+      - '3306:3306'
+    networks:
+      - my-network
+  web:
+    build:
+      context: "."
+      dockerfile: ./dockerfile
+    container_name: web
+    depends_on:
+      - db
+    ports:
+      - "80:80"
+    networks:
+      - my-network
+volumes:
+  data-mysql:
+networks:
+  my-network:
+
+-------------------------------------------
+
+init.sql:
+CREATE DATABASE db;
+USE db;
+CREATE TABLE mytable (myfield VARCHAR(20));
+INSERT INTO mytable VALUES ('Hello'), ('Dolly');
+
+
+-----------------
+apt-get update
+apt install mysql-server mysql-client         INSIDE THE CONTAINER
+mysql -h 172.18.0.3 -P 3306 -u root -p
+----------------
+
+
+
+
+FROM mysql:5.7
+COPY ./init.sql /docker-entrypoint-initdb.d
